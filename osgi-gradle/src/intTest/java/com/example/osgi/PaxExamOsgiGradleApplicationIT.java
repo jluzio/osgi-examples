@@ -17,8 +17,8 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
-//@RunWith(PaxExam.class)
-public class OldOsgiGradleApplicationIT {
+@RunWith(PaxExam.class)
+public class PaxExamOsgiGradleApplicationIT {
 
   @Inject
   private BundleContext bundleContext;
@@ -41,13 +41,13 @@ public class OldOsgiGradleApplicationIT {
     );
   }
 
-//  @Test
+  @Test
   public void testBundleIsActive() throws BundleException {
     assertNotNull("BundleContext should be injected", bundleContext);
 
     // Verify your bundle is actually installed and active
     var bundle = java.util.Arrays.stream(bundleContext.getBundles())
-        .filter(b -> b.getSymbolicName().equals("com.example.osgi"))
+        .filter(b -> b.getSymbolicName().equals("com.example.osgi-gradle"))
         .findFirst().orElse(null);
     assertNotNull("Our bundle should be present in Felix", bundle);
 

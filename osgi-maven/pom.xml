@@ -151,9 +151,9 @@
                 <!-- Optionally embed the Felix framework if you want a self-contained bundle (comment out if running Felix externally) -->
 <!--                <Embed-Artifact>org.apache.felix:org.apache.felix.framework</Embed-Artifact>-->
 
-<!--                <Bundle-RequiredExecutionEnvironment>JavaSE-17</Bundle-RequiredExecutionEnvironment>-->
+<!--                <Bundle-RequiredExecutionEnvironment>JavaSE-25</Bundle-RequiredExecutionEnvironment>-->
 
-                <!-- Do not include annotation processors / lombok at runtime -->
+                <!-- workaround: removing Require-Capability so it doesn't require more dependencies to be included -->
                 <_norequire>true</_norequire>
               </instructions>
             </configuration>

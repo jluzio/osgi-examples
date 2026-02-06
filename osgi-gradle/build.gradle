@@ -84,6 +84,7 @@ jar {
         // This tells OSGi: "At runtime, look for classes in the root (.) and in these JARs"
         'Bundle-ClassPath': '.,' + runtimeFiles.collect { "lib/${file(it).name}" }.join(','),
 
+        // workaround: removing Require-Capability so it doesn't require more dependencies to be included
         '-removeheaders': 'Require-Capability',
     )
   }
