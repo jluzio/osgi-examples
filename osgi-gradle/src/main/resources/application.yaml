@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: osgi
+
+logging:
+  level:
+    com.example: debug

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.2</version>
+    <relativePath/> <!-- lookup parent from repository -->
+  </parent>
+
+  <groupId>com.example</groupId>
+  <artifactId>osgi-maven</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>osgi-maven</name>
+  <description>osgi-maven</description>
+
+  <properties>
+    <java.version>17</java.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>7.0.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi.core</artifactId>
+      <version>8.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-configuration-processor</artifactId>
+            </path>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add Apache Felix maven-bundle-plugin to create an OSGi bundle using the activator -->
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>5.1.2</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>generate-osgi-bundle</id>
+            <phase>package</phase>
+            <goals>
+              <goal>bundle</goal>
+            </goals>
+            <configuration>
+              <instructions>
+                <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                <Bundle-Version>${project.version}</Bundle-Version>
+                <Bundle-Name>${project.name}</Bundle-Name>
+                <Bundle-Activator>com.example.osgi.OsgiApplicationActivator</Bundle-Activator>
+                <Export-Package>com.example.osgi</Export-Package>
+                <!-- Keep implementation packages private to the bundle -->
+<!--                <Private-Package>com.example.osgi.*</Private-Package>-->
+
+                <!-- Import runtime packages; make OSGi and logging optional if provided by runtime -->
+                <Import-Package>org.osgi.*;resolution:=optional,org.springframework.*;resolution:=optional,*;resolution:=optional</Import-Package>
+<!--                <Import-Package>org.osgi.*;resolution:=optional,org.springframework.*;resolution:=optional,!org.slf4j.*,!org.apache.logging.*,*;resolution:=optional</Import-Package>-->
+
+                <!-- Embed project compile/runtime dependencies into the bundle (except provided scope) -->
+                <Embed-Dependency>*;scope=compile</Embed-Dependency>
+<!--                <Embed-Dependency>*;scope=compile;artifactId=!org.apache.felix.framework</Embed-Dependency>-->
+<!--                <Embed-Dependency>*;scope=compile;artifactId=!org.apache.felix:org.apache.felix.framework|org.osgi:org.osgi.core</Embed-Dependency>-->
+                <Embed-Transitive>true</Embed-Transitive>
+
+                <!-- Optionally embed the Felix framework if you want a self-contained bundle (comment out if running Felix externally) -->
+<!--                <Embed-Artifact>org.apache.felix:org.apache.felix.framework</Embed-Artifact>-->
+
+<!--                <Bundle-RequiredExecutionEnvironment>JavaSE-17</Bundle-RequiredExecutionEnvironment>-->
+
+                <!-- Do not include annotation processors / lombok at runtime -->
+                <_norequire>true</_norequire>
+              </instructions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

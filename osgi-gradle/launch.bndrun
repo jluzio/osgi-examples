@@ -1,0 +1,20 @@
+# 1. Use Apache Felix as the framework
+-runfw: org.apache.felix.framework;version='[7.0.5,8)'
+-runee: JavaSE-17
+
+# 2. IMPORTANT: If the error persists, explicitly add the core to the path
+# This ensures the launcher has the OSGi API classes available immediately
+#-runpath: \
+#    org.osgi.service.component.annotations;version=1.5.0,\
+#    org.osgi.framework;version=1.10.0
+
+# 2. Tell Felix to include the bundle we just built
+# 'project' refers to the current module
+-runbundles: \
+    project;version=latest,\
+    org.apache.felix.gogo.shell;version='[1.1,2)',\
+    org.apache.felix.gogo.command;version='[1.1,2)',\
+    org.apache.felix.gogo.runtime;version='[1.1,2)'
+
+# 3. Clean the cache on every start so old versions don't stick around
+-runproperties: org.osgi.framework.storage.clean=onFirstInit

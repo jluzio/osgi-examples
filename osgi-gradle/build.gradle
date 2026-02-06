@@ -1,0 +1,98 @@
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '4.0.2'
+  id 'io.spring.dependency-management' version '1.1.7'
+  id 'biz.aQute.bnd.builder' version '7.2.1'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'osgi'
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(25)
+  }
+}
+
+configurations {
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-restclient'
+  implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+  compileOnly 'org.apache.felix:org.apache.felix.framework:7.0.5'
+  compileOnly 'org.osgi:osgi.core:8.0.0'
+  compileOnly 'org.projectlombok:lombok'
+  developmentOnly 'org.springframework.boot:spring-boot-devtools'
+  annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+  annotationProcessor 'org.projectlombok:lombok'
+  testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+  testImplementation 'org.apache.felix:org.apache.felix.framework:7.0.5'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  // Pax Exam Dependencies
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+  testImplementation 'org.ops4j.pax.exam:pax-exam-junit4:4.14.0'
+  testImplementation 'org.ops4j.pax.exam:pax-exam-container-native:4.14.0'
+  testImplementation 'org.ops4j.pax.exam:pax-exam-link-mvn:4.14.0'
+}
+
+sourceSets {
+  intTest {
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+  }
+}
+
+configurations {
+  intTestImplementation.extendsFrom testImplementation
+  intTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+bootJar {
+  enabled = false
+}
+
+jar {
+  enabled = true
+  archiveClassifier = '' // Removes the "-plain" suffix
+  bundle {
+    // Collect the files and convert Windows \ to /
+    def runtimeFiles = configurations.runtimeClasspath.files.collect { it.absolutePath.replace('\\', '/') }
+
+    bnd(
+        'Bundle-SymbolicName': "${project.group}.${project.name}",
+        'Bundle-Name': "${project.description}",
+        'Bundle-Version': "${project.version}",
+        'Bundle-Activator': 'com.example.osgi.OsgiApplicationActivator',
+        'Export-Package': 'com.example.osgi',
+
+        'Import-Package': 'org.osgi.*;resolution:=optional,org.springframework.*;resolution:=optional,*;resolution:=optional',
+//        'Import-Package': 'org.osgi.framework, *',
+
+        // This tells Bnd: "Take this JAR from the Gradle cache and put it in /lib inside my bundle"
+        '-includeresource': runtimeFiles.collect { "lib/${file(it).name}=${it}" }.join(','),
+        // This tells OSGi: "At runtime, look for classes in the root (.) and in these JARs"
+        'Bundle-ClassPath': '.,' + runtimeFiles.collect { "lib/${file(it).name}" }.join(','),
+
+        '-removeheaders': 'Require-Capability',
+    )
+  }
+}
+
+//tasks.register('runFelix', aQute.bnd.gradle.Bndrun) {
+//  bndrun = file('launch.bndrun')
+//}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
