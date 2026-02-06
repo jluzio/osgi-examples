@@ -52,7 +52,8 @@ dependencies {
   testImplementation 'org.ops4j.pax.exam:pax-exam-link-mvn:4.14.0'
 }
 
-// adding a test sourceSet for integrationTest :: Jvm Test Suite (recommended method?)
+// adding a test sourceSet for integrationTest :: Jvm Test Suite
+// note: running after jar due these OSGI tests requirements
 // https://docs.gradle.org/current/userguide/jvm_test_suite_plugin.html
 testing {
   suites {
@@ -80,15 +81,22 @@ testing {
     }
   }
 }
+
 check.dependsOn integrationTest
 
+// OSGI jar bundle configuration
+// disable Spring's registered bootJar
 bootJar {
   enabled = false
 }
 
 jar {
+  // re-enable jar due to Spring Boot
   enabled = true
-  archiveClassifier = '' // Removes the "-plain" suffix
+  // Removes the "-plain" suffix (Spring Boot)
+  archiveClassifier = ''
+
+  // bundle plugin
   bundle {
     // Collect the files and convert Windows \ to /
     def runtimeFiles = configurations.runtimeClasspath.files.collect { it.absolutePath.replace('\\', '/') }
