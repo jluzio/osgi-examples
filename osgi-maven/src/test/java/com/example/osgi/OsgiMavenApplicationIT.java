@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 
 class OsgiMavenApplicationIT {
 
@@ -29,8 +30,8 @@ class OsgiMavenApplicationIT {
     Files.createDirectories(storageDir);
 
     Map<String, Object> config = new HashMap<>();
-    config.put("org.osgi.framework.storage", storageDir.toString());
-    config.put("org.osgi.framework.storage.clean", "onFirstInit");
+    config.put(Constants.FRAMEWORK_STORAGE, storageDir.toString());
+    config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
 
     felix = new Felix(config);
     felix.init();

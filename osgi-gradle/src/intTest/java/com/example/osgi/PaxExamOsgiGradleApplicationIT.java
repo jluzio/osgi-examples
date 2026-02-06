@@ -52,6 +52,16 @@ public class PaxExamOsgiGradleApplicationIT {
     assertNotNull("Our bundle should be present in Felix", bundle);
 
     bundle.start();
+
+    var svcRef = bundleContext.getServiceReference(Greeter.class);
+    assertNotNull(svcRef);
+
+    var svc = bundleContext.getService(svcRef);
+    assertNotNull(svc);
+
+    var output = svc.hello("test");
+    assertNotNull(output);
+
     bundle.stop();
   }
 }

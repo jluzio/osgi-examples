@@ -25,10 +25,13 @@ repositories {
   mavenCentral()
 }
 
+ext {
+  felix_version = "7.0.5"
+}
+
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-restclient'
   implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-  compileOnly 'org.apache.felix:org.apache.felix.framework:7.0.5'
   compileOnly 'org.osgi:osgi.core:8.0.0'
   compileOnly 'org.projectlombok:lombok'
   developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -36,8 +39,11 @@ dependencies {
   annotationProcessor 'org.projectlombok:lombok'
   testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
   testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-  testImplementation 'org.apache.felix:org.apache.felix.framework:7.0.5'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  compileOnly "org.apache.felix:org.apache.felix.framework:${felix_version}"
+  testImplementation "org.apache.felix:org.apache.felix.framework:${felix_version}"
+  testImplementation "org.apache.felix:org.apache.felix.main:${felix_version}"
 
   // Pax Exam Dependencies
   testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
@@ -46,6 +52,7 @@ dependencies {
   testImplementation 'org.ops4j.pax.exam:pax-exam-link-mvn:4.14.0'
 }
 
+// doc: https://docs.gradle.org/current/userguide/java_testing.html#sec:configuring_java_integration_tests
 sourceSets {
   intTest {
     compileClasspath += sourceSets.main.output
@@ -57,6 +64,24 @@ configurations {
   intTestImplementation.extendsFrom testImplementation
   intTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
+
+tasks.register('integrationTest', Test) {
+  description = 'Runs integration tests.'
+  group = 'verification'
+
+  testClassesDirs = sourceSets.intTest.output.classesDirs
+  classpath = sourceSets.intTest.runtimeClasspath
+//  shouldRunAfter jar
+  dependsOn jar
+
+  useJUnitPlatform()
+
+  testLogging {
+    events "passed"
+  }
+}
+
+check.dependsOn integrationTest
 
 bootJar {
   enabled = false

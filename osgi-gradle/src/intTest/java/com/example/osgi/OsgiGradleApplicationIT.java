@@ -1,5 +1,7 @@
 package com.example.osgi;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -14,10 +16,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.launch.Framework;
 
 class OsgiGradleApplicationIT {
 
-  private Felix felix;
+  private Framework felix;
   private Path storageDir;
   private Bundle bundle;
 
@@ -27,8 +31,11 @@ class OsgiGradleApplicationIT {
     Files.createDirectories(storageDir);
 
     Map<String, Object> config = new HashMap<>();
-    config.put("org.osgi.framework.storage", storageDir.toString());
-    config.put("org.osgi.framework.storage.clean", "onFirstInit");
+    config.put(Constants.FRAMEWORK_STORAGE, storageDir.toString());
+    config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
+
+    // Tell Felix to use the host's version of the API package
+    config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.example.osgi");
 
     felix = new Felix(config);
     felix.init();
@@ -85,6 +92,14 @@ class OsgiGradleApplicationIT {
         .atMost(Duration.ofSeconds(30))
         .pollInterval(Duration.ofMillis(200))
         .untilAsserted(() -> Assertions.assertEquals(Bundle.ACTIVE, bundle.getState(), "Bundle did not reach ACTIVE state"));
+
+    var bundleBundleContext = bundle.getBundleContext();
+    var serviceReference = bundleBundleContext.getServiceReference(Greeter.class);
+    assertNotNull(serviceReference);
+//    var service = bundleBundleContext.getService(serviceReference);
+//    var output = service.hello("IT test");
+//    assertThat(output)
+//        .isNotEmpty();
   }
 
 }
