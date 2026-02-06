@@ -52,35 +52,34 @@ dependencies {
   testImplementation 'org.ops4j.pax.exam:pax-exam-link-mvn:4.14.0'
 }
 
-// doc: https://docs.gradle.org/current/userguide/java_testing.html#sec:configuring_java_integration_tests
-sourceSets {
-  intTest {
-    compileClasspath += sourceSets.main.output
-    runtimeClasspath += sourceSets.main.output
+// adding a test sourceSet for integrationTest :: Jvm Test Suite (recommended method?)
+// https://docs.gradle.org/current/userguide/jvm_test_suite_plugin.html
+testing {
+  suites {
+    test {
+      useJUnitJupiter()
+    }
+
+    integrationTest(JvmTestSuite) {
+      dependencies {
+        implementation project()
+      }
+
+      configurations.integrationTestImplementation {
+        extendsFrom(configurations.testImplementation)
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            shouldRunAfter(test)
+            dependsOn jar
+          }
+        }
+      }
+    }
   }
 }
-
-configurations {
-  intTestImplementation.extendsFrom testImplementation
-  intTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
-tasks.register('integrationTest', Test) {
-  description = 'Runs integration tests.'
-  group = 'verification'
-
-  testClassesDirs = sourceSets.intTest.output.classesDirs
-  classpath = sourceSets.intTest.runtimeClasspath
-//  shouldRunAfter jar
-  dependsOn jar
-
-  useJUnitPlatform()
-
-  testLogging {
-    events "passed"
-  }
-}
-
 check.dependsOn integrationTest
 
 bootJar {
