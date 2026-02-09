@@ -1,7 +1,6 @@
 package com.example.osgi;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,19 +64,9 @@ class OsgiMavenApplicationIT {
 
   @Test
   void testBundle() throws Exception {
-    var jarOpt = Files.list(Path.of("target"))
-        .filter(p -> {
-          String n = p.getFileName().toString();
-          return n.startsWith("osgi-maven-") && n.endsWith(".jar");
-        }).findFirst();
-    if (jarOpt.isEmpty()) {
-      fail("Could not find osgi-maven JAR in target/. Build the project first (mvn package).");
-      return;
-    }
-    Path jarPath = jarOpt.get().toAbsolutePath();
-
+    var bundlePath = BundleTestHelper.bundlePath("target", "osgi-");
     // Install the bundle from the built JAR using the framework started in @BeforeEach
-    String bundleLocation = jarPath.toUri().toString();
+    String bundleLocation = bundlePath.toUri().toString();
     bundle = felix.getBundleContext().installBundle(bundleLocation);
 
     // Start the bundle
@@ -89,5 +78,4 @@ class OsgiMavenApplicationIT {
         .pollInterval(Duration.ofMillis(200))
         .untilAsserted(() -> assertEquals(Bundle.ACTIVE, bundle.getState(), "Bundle did not reach ACTIVE state"));
   }
-
 }

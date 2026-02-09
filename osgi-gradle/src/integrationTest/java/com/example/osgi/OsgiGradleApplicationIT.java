@@ -69,19 +69,9 @@ class OsgiGradleApplicationIT {
 
   @Test
   void testBundle() throws Exception {
-    var jarOpt = Files.list(Path.of("build/libs"))
-        .filter(p -> {
-          String n = p.getFileName().toString();
-          return n.startsWith("osgi-gradle-") && n.endsWith(".jar");
-        }).findFirst();
-    if (jarOpt.isEmpty()) {
-      Assertions.fail("Could not find osgi-maven JAR in target/. Build the project first (mvn package).");
-      return;
-    }
-    Path jarPath = jarOpt.get().toAbsolutePath();
-
+    var bundlePath = BundleTestHelper.bundlePath("build/libs", "osgi-");
     // Install the bundle from the built JAR using the framework started in @BeforeEach
-    String bundleLocation = jarPath.toUri().toString();
+    String bundleLocation = bundlePath.toUri().toString();
     bundle = felix.getBundleContext().installBundle(bundleLocation);
 
     // Start the bundle
@@ -91,7 +81,8 @@ class OsgiGradleApplicationIT {
     Awaitility.await()
         .atMost(Duration.ofSeconds(30))
         .pollInterval(Duration.ofMillis(200))
-        .untilAsserted(() -> Assertions.assertEquals(Bundle.ACTIVE, bundle.getState(), "Bundle did not reach ACTIVE state"));
+        .untilAsserted(
+            () -> Assertions.assertEquals(Bundle.ACTIVE, bundle.getState(), "Bundle did not reach ACTIVE state"));
 
     var bundleBundleContext = bundle.getBundleContext();
     var serviceReference = bundleBundleContext.getServiceReference(Greeter.class);
@@ -101,5 +92,4 @@ class OsgiGradleApplicationIT {
 //    assertThat(output)
 //        .isNotEmpty();
   }
-
 }

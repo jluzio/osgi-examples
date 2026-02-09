@@ -3,6 +3,7 @@ plugins {
   id 'org.springframework.boot' version '4.0.2'
   id 'io.spring.dependency-management' version '1.1.7'
   id 'biz.aQute.bnd.builder' version '7.2.1'
+  id 'idea'
 }
 
 group = 'com.example'
@@ -53,36 +54,42 @@ dependencies {
 }
 
 // === Adding a test sourceSet for integrationTest :: Jvm Test Suite ===
-// note: running after jar due these OSGI tests requirements
-// https://docs.gradle.org/current/userguide/jvm_test_suite_plugin.html
-testing {
-  suites {
-    test {
-      useJUnitJupiter()
-    }
+sourceSets {
+  integrationTest {
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+  }
+}
 
-    integrationTest(JvmTestSuite) {
-      dependencies {
-        implementation project()
-      }
+configurations {
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
 
-      configurations.integrationTestImplementation {
-        extendsFrom(configurations.testImplementation)
-      }
+tasks.register('integrationTest', Test) {
+  description = 'Runs integration tests.'
+  group = 'verification'
 
-      targets {
-        all {
-          testTask.configure {
-            shouldRunAfter(test)
-            dependsOn jar
-          }
-        }
-      }
-    }
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+//  shouldRunAfter jar
+  dependsOn jar
+
+  useJUnitPlatform()
+
+  testLogging {
+    events "passed"
   }
 }
 
 check.dependsOn integrationTest
+
+idea {
+  module {
+    // This forces IntelliJ to treat the directory as a test root
+    testSources.from(sourceSets.integrationTest.java.srcDirs)
+  }
+}
 
 // === OSGI jar bundle configuration ===
 // disable Spring's registered bootJar
@@ -127,5 +134,8 @@ jar {
 //}
 
 tasks.named('test') {
+  useJUnitPlatform()
+}
+tasks.named('integrationTest') {
   useJUnitPlatform()
 }

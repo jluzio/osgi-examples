@@ -6,8 +6,6 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.options;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import javax.inject.Inject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,19 +23,13 @@ public class PaxExamOsgiGradleApplicationIT {
 
   @Configuration
   public Option[] config() throws IOException {
-//    var bundleJarName = System.getProperty("bundleJarName");
-    var bundlePath = Path.of("build/libs");
-    var bundleJarName = Files.list(bundlePath)
-        .filter(p -> p.getFileName().toString().startsWith("osgi"))
-        .findFirst()
-        .orElseThrow()
-        .getFileName()
-        .toString();
+    var bundlePath = BundleTestHelper.bundlePath("build/libs", "osgi-");
+    var bundleUri = bundlePath.toUri().toString();
     return options(
 //        org.ops4j.pax.exam.CoreOptions.felix(), // Tells Pax Exam to use the Felix container
         junitBundles(),
         // Loads your freshly built bundle into the test container
-        bundle("reference:file:build/libs/" + bundleJarName)
+        bundle("reference:" + bundleUri)
     );
   }
 
